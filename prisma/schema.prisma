@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+    id Int @id @default(autoincrement())
+    email String @unique
+    password String
+    role Role @default(USER)
+    reviews Review[]
+    orders Order[]
+    @@map("users")
+}
+
+model Review {
+    id Int @id @default(autoincrement())
+    rating Int
+    comment String
+    createdAt DateTime @default(now()) @map("created_at")
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId Int @map("user_id")
+    book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+    bookId Int @map("book_id")
+    @@map("reviews")
+}
+
+model Book {
+    id Int @id @default(autoincrement())
+    title String @unique
+    price Decimal @db.Decimal(10,2)
+    stock Int 
+    publicationTime DateTime @map("publication_time")
+    reviews Review[]
+    orderItems OrderItem[]
+    bookCategories BookCategory[]
+    bookAuthors BookAuthor[]
+    @@map("books")
+}
+
+model Order {
+    id Int @id @default(autoincrement())
+    totalPrice Decimal @db.Decimal(10,2) @map("total_price")
+    status Status @default(PENDING)
+    createdAt DateTime @map("created_at")
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId Int @map("user_id")
+    orderItems OrderItem[]
+    @@map("orders")
+}
+
+model OrderItem {
+    id Int @id @default(autoincrement())
+    quantity Int
+    price Decimal @db.Decimal(10,2)
+    order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    orderId Int @map("order_id")
+    book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+    bookId Int @map("book_id")
+    @@map("order_items")
+}
+
+model Category {
+    id Int @id @default(autoincrement())
+    categoryName String @map("category_name")
+    @@map("categories")
+}
+
+model BookCategory {
+    id Int @id @default(autoincrement())
+    book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+    bookId Int @map("book_id")
+    @@map("book_categories")
+}
+
+model Author {
+    id Int @id @default(autoincrement())
+    fullName String @map("full_name")
+    @@map("authors")
+}
+
+model BookAuthor {
+    id Int @id @default(autoincrement())
+    book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+    bookId Int @map("book_id")
+    @@map("book_authors")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Status {
+    PENDING
+    SHIPPING
+    DELIVERED
+}

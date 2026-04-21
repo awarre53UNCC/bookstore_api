@@ -26,6 +26,8 @@ model Review {
     userId Int @map("user_id")
     book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
     bookId Int @map("book_id")
+
+    @@unique([userId, bookId])
     @@map("reviews")
 }
 
@@ -46,7 +48,7 @@ model Order {
     id Int @id @default(autoincrement())
     totalPrice Decimal @db.Decimal(10,2) @map("total_price")
     status Status @default(PENDING)
-    createdAt DateTime @map("created_at")
+    createdAt DateTime @map("created_at") @default(now())
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId Int @map("user_id")
     orderItems OrderItem[]
@@ -54,39 +56,48 @@ model Order {
 }
 
 model OrderItem {
-    id Int @id @default(autoincrement())
     quantity Int
     price Decimal @db.Decimal(10,2)
     order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
     orderId Int @map("order_id")
     book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
     bookId Int @map("book_id")
+
+    @@id([orderId, bookId])
     @@map("order_items")
 }
 
 model Category {
     id Int @id @default(autoincrement())
     categoryName String @map("category_name")
+    books BookCategory[]
     @@map("categories")
 }
 
 model BookCategory {
-    id Int @id @default(autoincrement())
     book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
     bookId Int @map("book_id")
+    category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    categoryId Int      @map("category_id")
+
+    @@id([bookId, categoryId])
     @@map("book_categories")
 }
 
 model Author {
     id Int @id @default(autoincrement())
     fullName String @map("full_name")
+    books BookAuthor[]
     @@map("authors")
 }
 
 model BookAuthor {
-    id Int @id @default(autoincrement())
     book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
     bookId Int @map("book_id")
+    author   Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    authorId Int      @map("category_id")
+
+    @@id([bookId, authorId])
     @@map("book_authors")
 }
 

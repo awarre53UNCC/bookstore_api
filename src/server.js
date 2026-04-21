@@ -3,8 +3,7 @@ import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
 import yaml from 'js-yaml';
 import fs from 'fs';
-//import postRoutes from './routes/postRoutes.js';
-//import authRoutes from './routes/authRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -21,7 +20,6 @@ try {
 }
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs))
-////app.use('/api/posts', postRoutes);
 app.use('/api/auth', authRoutes);
 
 app.use((req, res, next) => {

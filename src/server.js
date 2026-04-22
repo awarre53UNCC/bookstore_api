@@ -4,6 +4,8 @@ import swaggerUi from 'swagger-ui-express';
 import yaml from 'js-yaml';
 import fs from 'fs';
 import authRoutes from './routes/authRoutes.js';
+import bookRoutes from './routes/bookRoutes.js'
+import orderRoutes from './routes/orderRoutes.js'
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -21,6 +23,8 @@ try {
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs))
 app.use('/api/auth', authRoutes);
+app.use('/api/books', bookRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.use((req, res, next) => {
   const err = new Error('Not Found');

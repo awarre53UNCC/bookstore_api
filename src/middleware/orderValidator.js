@@ -11,72 +11,43 @@ export const validateId = [
   handleValidationErrors,
 ];
 
-// export const validateCreateBook = [
-//   body('title')
-//     .exists({ values: 'falsy' })
-//     .withMessage('Title is required')
-//     .bail()
-//     .trim()
-//     .escape()
-//     .isLength({ min: 3 })
-//     .withMessage('Title must be at least 3 characters'),
+export const validateCreateOrder = [
+  body('items')
+    .exists({ values: 'falsy' })
+    .withMessage('Items are required')
+    .bail()
+    .isArray({ min: 1})
+    .withMessage('Items must be an non-empty array'),
 
-//   body('price')
-//     .exists({ values: 'falsy' })
-//     .withMessage('Price is required')
-//     .bail()
-//     .isDecimal({ min: 1.00})
-//     .withMessage('Price must be a postive decimal'),
+   body('items.*.bookId')
+    .exists({ values: 'falsy' })
+    .withMessage('bookId is required')
+    .bail()
+    .isInt({ min: 1 })
+    .withMessage('bookId must be a positive integer'),
 
-//   body('stock')
-//     .exists({ values: 'falsy' })
-//     .withMessage('Stock is required')
-//     .bail()
-//     .isInt({ min: 1})
-//     .withMessage('Stock must be a postive integer'),
+   body('items.*.quantity')
+    .exists({ values: 'falsy' })
+    .withMessage('quantity is required')
+    .bail()
+    .isInt({ min: 1 })
+    .withMessage('quantity must be a positive integer'),
 
-//   body('publicationYear')
-//     .exists({ values: 'falsy' })
-//     .withMessage('Publication Year is required')
-//     .bail()
-//     .isInt({ min: 1800})
-//     .withMessage('Publication Year must be a postive integer'), 
+  handleValidationErrors,
+];
 
-//   handleValidationErrors,
-// ];
+export const validateUpdateOrder = [
 
-// export const validateUpdateBook = [
-//   oneOf(
-//     [
-//       body('title').exists({ values: 'falsy' }),
-//       body('price').exists({ values: 'falsy' }),
-//       body('stock').exists({ values: 'falsy' }),
-//     ],
-//     { message: 'At least one field (title, price, stock) must be provided' },
-//   ),
-
-//   body('title')
-//     .optional()
-//     .trim()
-//     .escape()
-//     .isString()
-//     .withMessage('Title must be a string')
-//     .bail()
-//     .isLength({ min: 3 })
-//     .withMessage('Title must be at least 3 characters'),
-
-//   body('price')
-//     .optional()
-//     .isDecimal({ min: 1.00})
-//     .withMessage('Price must be a postive decimal'),
-
-//   body('stock')
-//     .optional()
-//     .isInt({ min: 1})
-//     .withMessage('Stock must be a postive integer'),
-
-//   handleValidationErrors,
-// ];
+    body('status')
+    .exists({ values: 'falsy' })
+    .withMessage('status is required')
+    .bail()
+    .trim()
+    .escape()
+    .isIn(['PENDING', 'SHIPPING', 'DELIVERED'])
+    .withMessage('status must be PENDING, SHIPPING, or DELIVERED'),
+  handleValidationErrors,
+];
 
 export const validateOrderQuery = [
   query('sortBy')

@@ -25,25 +25,25 @@ export async function getOrderById(id) {
   }
 }
 
-export async function createBook(orderData) {
-  return create(orderData);
+export async function createOrder({ totalPrice, bookIds, bookQuantities, prices}, user) {
+  return create({ totalPrice, bookIds, bookQuantities, prices}, user);
 }
 
-export async function updateBook(id, updatedData) {
-  const updatedBook = await update(id, updatedData);
-  if (updatedBook) return updatedBook;
+export async function updateOrder(id, updatedData) {
+  const updatedOrder = await update(id, updatedData);
+  if (updatedOrder) return updatedOrder;
   else {
-    const error = new Error(`Book ${id} not found`);
+    const error = new Error(`Order ${id} not found`);
     error.status = 404;
     throw error;
   }
 }
 
-export async function deleteBook(id) {
+export async function deleteOrder(id) {
   const result = await remove(id);
   if (result) return;
   else {
-    const error = new Error(`Book ${id} not found`);
+    const error = new Error(`Order ${id} not found`);
     error.status = 404;
     throw error;
   }

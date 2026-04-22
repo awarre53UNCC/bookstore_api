@@ -2,15 +2,15 @@ import express from 'express';
 import {
   getAllOrdersHandler,
   getOrderByIdHandler,
-//   createBookHandler,
-//   updateBookHandler,
-//   deleteBookHandler
+  createOrderHandler,
+  updateOrderHandler,
+  deleteOrderHandler
 } from '../controllers/orderController.js';
 
 import {
     validateId,
-    // validateCreateBook,
-    // validateUpdateBook,
+    validateCreateOrder,
+    validateUpdateOrder,
     validateOrderQuery,
 } from '../middleware/orderValidator.js';
 
@@ -21,8 +21,8 @@ import { authorizeRoles } from '../middleware/authorizeRoles.js'
 const router = express.Router();
 router.get('/', authenticate, validateOrderQuery, getAllOrdersHandler);
 router.get('/:id', authenticate, validateId, getOrderByIdHandler);
-// router.post('/', authenticate, authorizeRoles('ADMIN'), validateCreateBook, authorizeTitle, createBookHandler);
-// router.put('/:id', authenticate, authorizeRoles('ADMIN'), validateId, validateUpdateBook, updateBookHandler);
-// router.delete('/:id', authenticate, authorizeRoles('ADMIN'), validateId, deleteBookHandler);
+router.post('/', authenticate, validateCreateOrder, createOrderHandler);
+router.put('/:id', authenticate, authorizeRoles('ADMIN'), validateId, validateUpdateOrder, updateOrderHandler);
+router.delete('/:id', authenticate, validateId, deleteOrderHandler);
 
 export default router;

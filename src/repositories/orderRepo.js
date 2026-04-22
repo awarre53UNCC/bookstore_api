@@ -28,18 +28,37 @@ export async function getById(id) {
   return order;
 }
 
-export function create(orderData) {
-  const newOrder = prisma.order.create({ data: orderData });
+export async function create({ totalPrice, bookIds, bookQuantities, prices}, user) {
+
+  const newOrder = await prisma.order.create({ 
+    data: {
+        totalPrice,
+        userId: user.id
+    } 
+  });
+
+  const length = bookIds.length;
+//   for (let i = 0; i < length; i++) {
+//     console.log(bookIds[i], bookQuantities[i], prices[i]);
+//   }
+  for (let i = 0; i < length; i++) {
+    await prisma.orderItem.createMany({ 
+        data: [ 
+            { orderId: newOrder.id, bookId: bookIds[i], quantity: bookQuantities[i], price: prices[i] },
+        ],
+    });
+  }
+
   return newOrder;
 }
 
 export async function update(id, updatedData) {
   try {
-    const updatedBook = await prisma.book.update({
+    const updatedOrder = await prisma.order.update({
       where: { id },
       data: updatedData,
     });
-    return updatedBook;
+    return updatedOrder;
   } catch (error) {
     if (error.code === 'P2025') return null;
     throw error;
@@ -48,10 +67,10 @@ export async function update(id, updatedData) {
 
 export async function remove(id) {
   try {
-    const deletedBook = await prisma.book.delete({
+    const deletedOrder = await prisma.order.delete({
       where: { id },
     });
-    return deletedBook;
+    return deletedOrder;
   } catch (error) {
     if (error.code === 'P2025') return null;
     throw error;

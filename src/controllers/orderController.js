@@ -2,10 +2,12 @@ import {
   getAllOrdersAdmin,
   getAllOrdersUser,
   getOrderById,
-  createBook,
-  updateBook,
-  deleteBook,
+  createOrder,
+  updateOrder,
+  deleteOrder,
 } from '../services/orderService.js';
+
+import { getById } from '../repositories/bookRepo.js'
 
 export async function getAllOrdersHandler(req, res) {
   const {
@@ -55,21 +57,59 @@ export async function getOrderByIdHandler(req, res) {
   
 }
 
-export async function createBookHandler(req, res) {
-  const { title, price, stock, publicationYear } = req.body;
-  const newBook = await createBook({ title, price, stock, publicationYear});
-  res.status(201).json(newBook);
+export async function createOrderHandler(req, res) {
+  const { items } = req.body;
+  let totalPrice = 0;
+  let bookIds = [];
+  let bookQuantities = [];
+  let prices = [];
+//   console.log('items: ', items);
+
+  for (let i = 0; i < items.length; i++) {
+    // console.log('bookId: ', items[i].bookId)
+    // console.log('quantity: ', items[i].quantity)
+
+    let book = await getById(items[i].bookId);
+    let iterationPrice = book.price;
+
+    // console.log('price: ', iterationPrice)
+
+    totalPrice += (iterationPrice * items[i].quantity);
+    bookIds[i] = items[i].bookId;
+    bookQuantities[i] = items[i].quantity;
+    prices[i] = iterationPrice;
+  }
+
+
+  //const status = 'PENDING';
+  const newOrder = await createOrder({ totalPrice, bookIds, bookQuantities, prices}, req.user);
+  res.status(201).json(newOrder);
 }
 
-export async function updateBookHandler(req, res) {
+export async function updateOrderHandler(req, res) {
   const id = parseInt(req.params.id);
-  const { title, price, stock } = req.body;
-  const updatedBook = await updateBook(id, { title, price, stock });
-  res.status(200).json(updatedBook);
+  const { status } = req.body;
+  const updatedOrder = await updateOrder(id, { status });
+  res.status(200).json(updatedOrder);
 }
 
-export async function deleteBookHandler(req, res) {
-  const id = parseInt(req.params.id);
-  await deleteBook(id);
-  res.status(204).send();
+export async function deleteOrderHandler(req, res) {
+  if (req.user.role === 'ADMIN') {
+    const id = parseInt(req.params.id);
+    await deleteOrder(id);
+    res.status(204).send();
+  }
+  else {
+    const id = parseInt(req.params.id);
+    const order = await getOrderById(id);
+    if (order.userId == req.user.id) {
+        await deleteOrder(id);
+        res.status(204).send();
+    }
+    else {
+        const error = new Error(`Forbidden: Not your order`);
+        error.status = 403;
+        throw error;
+    }
+  }
 }

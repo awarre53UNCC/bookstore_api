@@ -4,7 +4,8 @@ import {
   getBookByIdHandler,
   createBookHandler,
   updateBookHandler,
-  deleteBookHandler
+  deleteBookHandler,
+  getReviewsForBookHandler
 } from '../controllers/bookController.js';
 
 import {
@@ -25,5 +26,6 @@ router.get('/:id', validateId, getBookByIdHandler);
 router.post('/', authenticate, authorizeRoles('ADMIN'), validateCreateBook, authorizeTitle, createBookHandler);
 router.put('/:id', authenticate, authorizeRoles('ADMIN'), validateId, validateUpdateBook, updateBookHandler);
 router.delete('/:id', authenticate, authorizeRoles('ADMIN'), validateId, deleteBookHandler);
+router.get('/:id/reviews', validateId, getReviewsForBookHandler)
 
 export default router;

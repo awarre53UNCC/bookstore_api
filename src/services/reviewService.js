@@ -1,6 +1,7 @@
 import {
   getAll,
   getById,
+  getByBookId,
   create,
   update,
   remove,
@@ -15,6 +16,16 @@ export async function getReviewById(id) {
   if (review) return review;
   else {
     const error = new Error(`Review ${id} not found`);
+    error.status = 404;
+    throw error;
+  }
+}
+
+export async function getReviewByBookId(id) {
+  const review = await getByBookId(id);
+  if (review) return review;
+  else {
+    const error = new Error(`Book ${id} not found`);
     error.status = 404;
     throw error;
   }

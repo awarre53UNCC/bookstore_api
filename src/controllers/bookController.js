@@ -6,6 +6,11 @@ import {
   deleteBook,
 } from '../services/bookService.js';
 
+import { getById } from '../repositories/bookRepo.js'
+
+import { getReviewByBookId } from '../services/reviewService.js'
+
+
 export async function getAllBooksHandler(req, res) {
   const {
     search = '',
@@ -49,4 +54,11 @@ export async function deleteBookHandler(req, res) {
   const id = parseInt(req.params.id);
   await deleteBook(id);
   res.status(204).send();
+}
+
+
+export async function getReviewsForBookHandler(req, res) {
+  const id = parseInt(req.params.id);
+  const reviews = await getReviewByBookId(id);
+  res.status(200).json(reviews);
 }

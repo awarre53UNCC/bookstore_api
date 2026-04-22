@@ -24,6 +24,11 @@ export async function getById(id) {
   return review;
 }
 
+export async function getByBookId(id) {
+  const reviews = await prisma.review.findMany({ where: { bookId: id } });
+  return reviews;
+}
+
 export async function create(reviewData, user) {
   try {
     const newReview = await prisma.review.create({ 

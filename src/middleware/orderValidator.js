@@ -52,7 +52,7 @@ export const validateUpdateOrder = [
 export const validateOrderQuery = [
   query('sortBy')
     .optional()
-    .isIn(['id', 'created_at', 'status', 'total_price', 'user_id'])
+    .isIn(['id', 'createdAt', 'status', 'totalPrice', 'userId'])
     .withMessage('sortBy must be one of id, created_at, status, total_price, or user_id'),
 
   query('order')

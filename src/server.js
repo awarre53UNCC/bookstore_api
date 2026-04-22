@@ -6,6 +6,7 @@ import fs from 'fs';
 import authRoutes from './routes/authRoutes.js';
 import bookRoutes from './routes/bookRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
+import reviewRoutes from './routes/reviewRoutes.js'
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -25,6 +26,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs))
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.use((req, res, next) => {
   const err = new Error('Not Found');

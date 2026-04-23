@@ -6,14 +6,14 @@ import {
   deleteBook,
 } from '../services/bookService.js';
 
-import { getById } from '../repositories/bookRepo.js'
-
 import { getReviewByBookId } from '../services/reviewService.js'
 
 
 export async function getAllBooksHandler(req, res) {
   const {
     search = '',
+    category = '',
+    author = '',
     sortBy = 'id',
     order = 'asc',
     offset = 0,
@@ -22,6 +22,8 @@ export async function getAllBooksHandler(req, res) {
 
   const options = {
     search,
+    category,
+    author,
     sortBy,
     order,
     offset: parseInt(offset),

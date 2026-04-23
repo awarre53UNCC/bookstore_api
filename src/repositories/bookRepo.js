@@ -2,7 +2,7 @@ import prisma from '../config/db.js';
 
 export async function getAll({ search, category, author, sortBy, order, offset, limit }) {
   let where = {};
-
+  // console.log({ search, category, author })
   if (search) {
     where.title = {
       contains: search,
@@ -10,31 +10,31 @@ export async function getAll({ search, category, author, sortBy, order, offset, 
     };
   }
 
-//   if (category) {
-//     where.bookCategories = {
-//       some: {
-//         category: {
-//           categoryName: {
-//             contains: category,
-//             mode: 'insensitive',
-//           },
-//         },
-//       },
-//     };
-//   }
+  if (category) {
+    where.bookCategories = {
+      some: {
+        category: {
+          categoryName: {
+            contains: category,
+            mode: 'insensitive',
+          },
+        },
+      },
+    };
+  }
 
-//   if (author) {
-//     where.bookAuthors = {
-//       some: {
-//         author: {
-//           fullName: {
-//             contains: author,
-//             mode: 'insensitive',
-//           },
-//         },
-//       },
-//     };
-//   }
+  if (author) {
+    where.bookAuthors = {
+      some: {
+        author: {
+          fullName: {
+            contains: author,
+            mode: 'insensitive',
+          },
+        },
+      },
+    };
+  }
 
   const books = await prisma.book.findMany({
     where,

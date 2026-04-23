@@ -4,9 +4,11 @@ import swaggerUi from 'swagger-ui-express';
 import yaml from 'js-yaml';
 import fs from 'fs';
 import authRoutes from './routes/authRoutes.js';
-import bookRoutes from './routes/bookRoutes.js'
-import orderRoutes from './routes/orderRoutes.js'
-import reviewRoutes from './routes/reviewRoutes.js'
+import bookRoutes from './routes/bookRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+import authorRoutes from './routes/authorRoutes.js'
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -27,6 +29,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/authors', authorRoutes);
 
 app.use((req, res, next) => {
   const err = new Error('Not Found');

@@ -101,3 +101,29 @@ export const validateBookQuery = [
 
   handleValidationErrors,
 ];
+
+export const validateCreateCategory = [
+  body('name')
+    .exists({ values: 'falsy' })
+    .withMessage('Name (for category) is required')
+    .bail()
+    .trim()
+    .escape()
+    .isLength({ min: 3 })
+    .withMessage('Name (for category) must be at least 3 characters'),
+
+  handleValidationErrors,
+];
+
+export const validateCreateAuthor = [
+  body('name')
+    .exists({ values: 'falsy' })
+    .withMessage('Name (full name) is required')
+    .bail()
+    .trim()
+    .escape()
+    .isLength({ min: 3 })
+    .withMessage('Name (full name) must be at least 3 characters'),
+
+  handleValidationErrors,
+];

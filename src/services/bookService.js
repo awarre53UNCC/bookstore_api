@@ -4,6 +4,10 @@ import {
   create,
   update,
   remove,
+  createCategory,
+  createAuthor,
+  getAllCategories,
+  getAllAuthors
 } from '../repositories/bookRepo.js';
 
 export async function getAllBooks(options) {
@@ -20,8 +24,8 @@ export async function getBookById(id) {
   }
 }
 
-export async function createBook(bookData) {
-  return create(bookData);
+export async function createBook({ title, price, stock, publicationYear, authorIds, categoryIds}) {
+  return create({ title, price, stock, publicationYear, authorIds, categoryIds});
 }
 
 export async function updateBook(id, updatedData) {
@@ -42,4 +46,20 @@ export async function deleteBook(id) {
     error.status = 404;
     throw error;
   }
+}
+
+export async function createNewCategory({ name }) {
+  return await createCategory({ name });
+}
+
+export async function createNewAuthor({ name }) {
+  return await createAuthor({ name });
+}
+
+export async function getAllTheCategories() {
+   return await getAllCategories();
+}
+
+export async function getAllTheAuthors() {
+   return await getAllAuthors();
 }

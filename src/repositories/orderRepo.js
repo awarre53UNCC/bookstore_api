@@ -38,9 +38,7 @@ export async function create({ totalPrice, bookIds, bookQuantities, prices}, use
   });
 
   const length = bookIds.length;
-//   for (let i = 0; i < length; i++) {
-//     console.log(bookIds[i], bookQuantities[i], prices[i]);
-//   }
+
   for (let i = 0; i < length; i++) {
     await prisma.orderItem.createMany({ 
         data: [ 

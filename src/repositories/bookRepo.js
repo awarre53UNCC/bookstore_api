@@ -42,17 +42,127 @@ export async function getAll({ search, category, author, sortBy, order, offset, 
     take: limit,
     skip: offset,
   });
-  return books;
+  // console.log(books)
+
+  let finalBooks = [];
+
+  for (let i = 0; i < books.length; i++) {
+
+    //Author
+    const bookAuthors = await prisma.bookAuthor.findMany({ where: {bookId: books[i].id}})
+    let authors = [];
+    for (let i = 0; i < bookAuthors.length; i++) {
+      authors[i] = await prisma.author.findUnique({ where: {id: bookAuthors[i].authorId}})
+    }
+
+    //Category
+    const bookCategories = await prisma.bookCategory.findMany({ where: {bookId: books[i].id}})
+    let categories = [];
+    for (let i = 0; i < bookCategories.length; i++) {
+      categories[i] = await prisma.category.findUnique({ where: {id: bookCategories[i].categoryId}})
+    }
+    // console.log(authors);
+    // console.log(categories);
+
+    const finalBook = {
+      id: books[i].id,
+      title: books[i].title,
+      price: books[i].price,
+      stock: books[i].stock,
+      publicationYear: books[i].publicationYear,
+      authors: authors,
+      categories: categories,
+    }
+    finalBooks[i] = finalBook;
+  }
+  // console.log(finalBooks);
+
+  return finalBooks;
 }
 
 export async function getById(id) {
   const book = await prisma.book.findUnique({ where: { id } });
-  return book;
+  
+  const bookAuthors = await prisma.bookAuthor.findMany({ where: {bookId: id}})
+  let authors = [];
+  for (let i = 0; i < bookAuthors.length; i++) {
+    authors[i] = await prisma.author.findUnique({ where: {id: bookAuthors[i].authorId}})
+  }
+  // console.log(bookAuthors);
+  // console.log(authors);
+
+  const bookCategories = await prisma.bookCategory.findMany({ where: {bookId: id}})
+  let categories = [];
+  for (let i = 0; i < bookCategories.length; i++) {
+    categories[i] = await prisma.category.findUnique({ where: {id: bookCategories[i].categoryId}})
+  }
+  // console.log(bookCategories);
+  // console.log(categories);
+
+  const finalBook = {
+    id: book.id,
+    title: book.title,
+    price: book.price,
+    stock: book.stock,
+    publicationYear: book.publicationYear,
+    authors: authors,
+    categories: categories,
+  }
+
+  // console.log(finalBook);
+  return finalBook;
 }
 
-export function create(bookData) {
-  const newBook = prisma.book.create({ data: bookData });
-  return newBook;
+export async function create({ title, price, stock, publicationYear, authorIds, categoryIds}) {
+
+  const newBook = await prisma.book.create({
+    data: {
+      title,
+      price,
+      stock,
+      publicationYear,
+      // bookCategories: categoryIds,
+      // bookAuthors: authorIds,
+    }
+  });
+
+  const categoryData = categoryIds.map(id => ({
+    bookId: newBook.id,
+    categoryId: id,
+  }));
+  const authorData = authorIds.map(id => ({
+    bookId: newBook.id,
+    authorId: id,
+  }));
+  await prisma.bookCategory.createMany({ data: categoryData });
+  await prisma.bookAuthor.createMany({ data: authorData });
+
+  const bookAuthors = await prisma.bookAuthor.findMany({ where: {bookId: newBook.id}})
+  let authors = [];
+  for (let i = 0; i < bookAuthors.length; i++) {
+    authors[i] = await prisma.author.findUnique({ where: {id: bookAuthors[i].authorId}})
+  }
+  // console.log(bookAuthors);
+  // console.log(authors);
+
+  const bookCategories = await prisma.bookCategory.findMany({ where: {bookId: newBook.id}})
+  let categories = [];
+  for (let i = 0; i < bookCategories.length; i++) {
+    categories[i] = await prisma.category.findUnique({ where: {id: bookCategories[i].categoryId}})
+  }
+  // console.log(bookCategories);
+  // console.log(categories);
+
+  const finalBook = {
+    id: newBook.id,
+    title: newBook.title,
+    price: newBook.price,
+    stock: newBook.stock,
+    publicationYear: newBook.publicationYear,
+    authors: authors,
+    categories: categories,
+  }
+  return finalBook;
 }
 
 export async function update(id, updatedData) {
@@ -61,7 +171,30 @@ export async function update(id, updatedData) {
       where: { id },
       data: updatedData,
     });
-    return updatedBook;
+    const bookAuthors = await prisma.bookAuthor.findMany({ where: {bookId: updatedBook.id}})
+    let authors = [];
+    for (let i = 0; i < bookAuthors.length; i++) {
+      authors[i] = await prisma.author.findUnique({ where: {id: bookAuthors[i].authorId}})
+    }
+    
+
+    const bookCategories = await prisma.bookCategory.findMany({ where: {bookId: updatedBook.id}})
+    let categories = [];
+    for (let i = 0; i < bookCategories.length; i++) {
+      categories[i] = await prisma.category.findUnique({ where: {id: bookCategories[i].categoryId}})
+    }
+
+
+    const finalBook = {
+      id: updatedBook.id,
+      title: updatedBook.title,
+      price: updatedBook.price,
+      stock: updatedBook.stock,
+      publicationYear: updatedBook.publicationYear,
+      authors: authors,
+      categories: categories,
+    }
+    return finalBook;
   } catch (error) {
     if (error.code === 'P2025') return null;
     throw error;
@@ -78,4 +211,34 @@ export async function remove(id) {
     if (error.code === 'P2025') return null;
     throw error;
   }
+}
+
+export async function createCategory({ name }) {
+  const createdCategory = await prisma.category.create({
+    data: {
+      categoryName: name
+    }
+  });
+  return createdCategory;
+}
+
+export async function createAuthor({ name }) {
+  const createdAuthor = await prisma.author.create({
+    data: {
+      fullName: name
+    }
+  });
+  return createdAuthor;
+}
+
+export async function getAllCategories() {
+  const categories = await prisma.category.findMany();
+  // console.log(categories);
+  return categories;
+}
+
+export async function getAllAuthors() {
+  const authors = await prisma.author.findMany();
+  // console.log(categories);
+  return authors;
 }

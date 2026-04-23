@@ -69,7 +69,7 @@ model OrderItem {
 
 model Category {
     id Int @id @default(autoincrement())
-    categoryName String @map("category_name")
+    categoryName String @unique @map("category_name")
     books BookCategory[]
     @@map("categories")
 }
@@ -86,7 +86,7 @@ model BookCategory {
 
 model Author {
     id Int @id @default(autoincrement())
-    fullName String @map("full_name")
+    fullName String @unique @map("full_name")
     books BookAuthor[]
     @@map("authors")
 }

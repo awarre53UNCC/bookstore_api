@@ -92,6 +92,10 @@ export async function getAllUser({ sortBy, order, offset, limit }, user) {
 export async function getById(id) {
   const order = await prisma.order.findUnique({ where: { id } });
 
+  if (!order) {
+    return null;
+  }
+
   // console.log(order);
   const orderItems = await prisma.orderItem.findMany({
     where: { orderId: id },
@@ -132,6 +136,31 @@ export async function create({ totalPrice, bookIds, bookQuantities, prices}, use
         userId: user.id
     } 
   });
+
+
+  //checks
+
+  // const booksLength = await prisma.book.findMany({});
+
+  // let flag = false;
+  // let badID;
+
+  // for (let i = 0; i < bookIds.length; i++) {
+  //   if (booksLength.length < bookIds[i]) {
+  //     flag = true;
+  //     badID = bookIds[i];
+  //     break;
+  //   }
+  // }
+
+  // if (flag) {
+  //   const error = new Error(`Bad request: book with ID ${badID}`);
+  //   error.status = 400;
+  //   throw error;
+  // }
+
+
+  // // end checks
 
   const length = bookIds.length;
 

@@ -70,6 +70,11 @@ export async function createOrderHandler(req, res) {
     // console.log('quantity: ', items[i].quantity)
 
     let book = await getById(items[i].bookId);
+    if (!book) {
+      const error = new Error(`Bad request: no book with an ID of ${items[i].bookId} `);
+      error.status = 400;
+      throw error;
+    }
     let iterationPrice = book.price;
 
     // console.log('price: ', iterationPrice)

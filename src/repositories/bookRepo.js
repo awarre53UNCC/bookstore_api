@@ -82,6 +82,10 @@ export async function getAll({ search, category, author, sortBy, order, offset, 
 
 export async function getById(id) {
   const book = await prisma.book.findUnique({ where: { id } });
+
+  if (!book) {
+    return null;
+  }
   
   const bookAuthors = await prisma.bookAuthor.findMany({ where: {bookId: id}})
   let authors = [];
@@ -125,6 +129,64 @@ export async function create({ title, price, stock, publicationYear, authorIds, 
       // bookAuthors: authorIds,
     }
   });
+
+
+  //checks
+
+  if (authorIds == null && categoryIds == null) {
+    const error = new Error(`Bad request: authorIds & categoryIds invalid/notFound`);
+    error.status = 400;
+    throw error;
+  }
+  if (authorIds == null) {
+    const error = new Error(`Bad request: authorIds invalid/notFound`);
+    error.status = 400;
+    throw error;
+  }
+  if (categoryIds == null) {
+    const error = new Error(`Bad request: categoryIds invalid/notFound`);
+    error.status = 400;
+    throw error;
+  }
+
+  const authorsCheck = await prisma.author.findMany({});
+  const categoriesCheck = await prisma.category.findMany({});
+
+  let authorFlag = false;
+
+  for (let i = 0; i < authorIds.length; i++) {
+    if (authorsCheck.length < authorIds[i]) {
+      authorFlag = true;
+      break;
+    }
+  }
+
+  let categoryFlag = false;
+
+  for (let i = 0; i < categoryIds.length; i++) {
+    if (categoriesCheck.length < categoryIds[i]) {
+      categoryFlag = true;
+      break;
+    }
+  }
+  if (authorFlag && categoryFlag) {
+    const error = new Error(`Bad request: authorIds & categoryIds invalid/notFound`);
+    error.status = 400;
+    throw error;
+  }
+  if (authorFlag) {
+    const error = new Error(`Bad request: authorIds invalid/notFound`);
+    error.status = 400;
+    throw error;
+  }
+  if (categoryFlag) {
+    const error = new Error(`Bad request: categoryId(s) invalid/notFound`);
+    error.status = 400;
+    throw error;
+  }
+
+
+  // end checks
 
   const categoryData = categoryIds.map(id => ({
     bookId: newBook.id,

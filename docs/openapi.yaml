@@ -1,0 +1,463 @@
+openapi: 3.0.3
+
+info:
+  title: Bookstore API
+  version: 1.0.0
+  description: API documentation for my Bookstore API, a project for ITIS 4166
+
+servers:
+  - url: http://localhost:3000/api
+
+tags:
+  - name: Auth
+    description: User authentication endpoints
+  - name: Books
+    description: Operations related to book inventory
+  - name: Orders
+    description: Operations related to book orders 
+  - name: Reviews
+    description: Operations related to book reviews
+  #should i do sub tags for additional book endpoints
+
+paths: 
+    /auth/login:
+      post:
+        tags:
+          - Auth
+        summary: Authenticate user
+        description: Authenticate a user and return an access token.
+        requestBody: 
+          description: User login credentials
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthCredentials'
+        responses:
+          '200':
+            description: Authentication successful
+            content: 
+              application/json:
+                schema:
+                  type: object 
+                  properties:
+                    accessToken: 
+                      type: string
+                  example:
+                    accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+          '400':
+            $ref: '#/components/responses/InvalidUserInput'
+          '401':  
+            description: Invalid credentials
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error: 
+                      type: string
+                  example:
+                    error: 'Invalid credentials'
+
+    /auth/signup:
+      post:
+        tags:
+          - Auth
+        summary: Register user
+        description: Creates a new user account
+        requestBody:
+          description: User signup credentials
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthCredentials'
+        responses:
+          '201':
+            description: Sign up successfully
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/AuthCredentials'
+          '400':
+            $ref: '#/components/responses/InvalidUserInput'
+          '409':
+            $ref: '#/components/responses/EmailConflict'
+
+    /books:
+      get:
+        tags:
+          - Books
+        summary: Gets all books
+        description: Retrieves the bookstore's book catalog
+        parameters:
+          - $ref: '#/components/parameters/SearchBooks'
+          - name: category
+            in: query
+            required: false
+            description: Filter books containing this category
+            schema:
+              type: string
+              example: fantasy
+          - name: author
+            in: query
+            required: false
+            description: Filter books containing this author
+            schema:
+              type: string
+              example: Rowling
+          - $ref: '#/components/parameters/SortBooks'
+          - $ref: '#/components/parameters/OrderBooks'
+          - $ref: '#/components/parameters/OffsetBooks'
+          - $ref: '#/components/parameters/LimitBooks'
+        responses:
+          '200': 
+            description: A list of books
+            content: 
+              application/json:
+                schema: 
+                  type: array
+                  items: 
+                    $ref: '#/components/schemas/Book'
+          '400':
+            $ref: '#/components/responses/InvalidBookQuery'
+      post:
+        security:
+          - bearerAuth: []
+        tags:
+          - Books
+        summary: Create a new book
+        description: Create a new book and adds to the catalog, admin only.
+        requestBody: 
+          description: Book object to create.
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookCreate'
+        responses:
+          '201':
+            description: Post successfully created
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Book'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '400':
+            description: Bad request due to invalid book data
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties: 
+                    errors:
+                      type: array
+                      items: 
+                        type: string
+                  example:
+                    errors:
+                      - Title must be at least 3 characters
+                      - Stock must be a postive integer
+                      - Price must be greater than 0
+          '403':
+            $ref: '#/components/responses/Unauthorized'
+          '409':
+            $ref: '#/components/responses/duplicateTitle'
+
+
+    /books/{id}:
+      get:
+        tags:
+          - Books
+        summary: Get a book by ID
+        description: Retrieve a single book by its ID.
+        parameters:
+          - $ref: '#/components/parameters/ResourceId'
+        responses: 
+          '200':
+            description: A single book
+            content: 
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Book'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '400':
+            $ref: '#/components/responses/InvalidId'
+    
+
+
+components:
+  schemas:
+    Author:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+        fullName:
+          type: string
+          example: J.K. Rowling
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+        categoryName:
+          type: string
+          example: Fantasy
+    Book:
+      type: object
+      properties: 
+        id:
+          type: integer
+          #readOnly: true
+          example: 1
+        title:
+          type: string
+          example: 'Harry Potter'
+        price:
+          type: integer
+          example: 29.99
+        stock:
+          type: integer
+          #readOnly: true
+          example: 15
+        publicationYear:
+          type: integer
+          #readOnly: true
+          example: 1997
+        authors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Author'
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+
+    BookCreate:
+      type: object
+      properties: 
+        title:
+          type: string
+          #readOnly: true
+          example: 'The Hunger Games: Mocking Jay'
+        price:
+          type: integer
+          example: 20.00
+        stock:
+          type: integer
+          #readOnly: true
+          example: 10
+        publicationYear:
+          type: integer
+          #readOnly: true
+          example: 2008
+        authorIds:
+          type: array
+          example: [2, 3]
+        categoryIds:
+          type: array
+          example: [1, 2]
+
+    AuthCredentials:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        email:
+          type: string
+          example: 'user@test.com'
+        password: 
+          type: string
+          writeOnly: true
+          example: 'password123'
+        role: 
+          type: string
+          readOnly: true
+          enum: [USER, ADMIN]
+          example: 'USER'
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      description: Resource ID
+      schema: 
+        type: integer
+        example: 1
+    SearchBooks:
+      name: search
+      in: query
+      required: false
+      description: Filter items containing this keyword
+      schema:
+        type: string
+        example: Harry Potter
+    SortBooks:
+      name: sortBy
+      in: query
+      required: false
+      description: Field to sort results by
+      schema:
+        type: string
+        enum: [id, title, publication_year, stock, price]
+        example: price
+    OrderBooks:
+      name: order
+      in: query
+      required: false
+      description: Sort order (asc or desc)
+      schema:
+        type: string
+        enum: [asc, desc]
+        example: desc
+    OffsetBooks:
+      name: offset
+      in: query
+      required: false
+      description: Number of items to skip
+      schema:
+        type: integer
+        example: 0
+    LimitBooks:
+      name: limit
+      in: query
+      required: false
+      description: Maximum number of items to return
+      schema:
+        type: integer
+        example: 10
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: 
+            type: object
+            properties:
+              error:
+                type: string
+            example: 
+              error: 'Resource 100 not found'
+
+    InvalidId:
+      description: Invalid ID
+      content:
+        application/json:
+          schema: 
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  type: string
+            example:
+              errors: ['ID must be a positive integer']
+
+    InvalidInput:
+      description: Bad request due to invalid input or invalid ID
+      content:
+        application/json:
+          schema: 
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  type: string
+            example:
+              errors: ['ID must be a positive integer', 'Title must be at least 3 characters']
+
+    InvalidBookQuery:
+      description: Bad request due to invalid query
+      content:
+        application/json:
+          schema:
+            type: object
+            properties: 
+              errors:
+                type: array
+                items: 
+                  type: string
+            example:
+              errors:
+                - sortBy must be one of id, title, publication_year, stock, or price
+                - limit must be an integer between 1 and 50
+                - order must be either asc or desc
+    
+    Unauthenticated:
+      description: Client is not authenticated
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+            example:
+              error: 'Not authenticated. Please provide a valid token.'
+
+    InvalidUserInput:
+      description: Bad request due to invalid data
+      content: 
+        application/json:
+          schema:  
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  type: string
+            example: 
+              errors: 
+                - 'Email is required'
+                - 'Password is required'
+    
+    EmailConflict:
+      description: Duplicate email
+      content: 
+        application/json:
+          schema:  
+            type: object
+            properties:
+              error:
+                type: string
+            example:
+              error: 'Email has already been used'
+    
+    Unauthorized:
+      description: User is not authorized, admin only
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+            example:
+              error: 'Forbidden: insufficient permission.'
+    
+    duplicateTitle:
+      description: Book title is already in use
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+            example:
+              error: 'Conflict: duplicate title'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

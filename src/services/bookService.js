@@ -25,11 +25,6 @@ export async function getBookById(id) {
 }
 
 export async function createBook({ title, price, stock, publicationYear, authorIds, categoryIds}) {
-  if (price <= 0) {
-    const error = new Error("Price must be greater than 0");
-    error.status = 400;
-    throw error;
-}
   return create({ title, price, stock, publicationYear, authorIds, categoryIds});
 }
 

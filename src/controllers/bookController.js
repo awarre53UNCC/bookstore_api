@@ -53,6 +53,7 @@ export async function updateBookHandler(req, res) {
   const id = parseInt(req.params.id);
   const { title, price, stock } = req.body;
   const updatedBook = await updateBook(id, { title, price, stock });
+  console.log(updatedBook)
   res.status(200).json(updatedBook);
 }
 

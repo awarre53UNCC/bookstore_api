@@ -67,7 +67,7 @@ export async function getAll({ search, category, author, sortBy, order, offset, 
     const finalBook = {
       id: books[i].id,
       title: books[i].title,
-      price: books[i].price,
+      price: Number(books[i].price).toFixed(2),
       stock: books[i].stock,
       publicationYear: books[i].publicationYear,
       authors: authors,
@@ -106,7 +106,7 @@ export async function getById(id) {
   const finalBook = {
     id: book.id,
     title: book.title,
-    price: book.price,
+    price: Number(book.price).toFixed(2),
     stock: book.stock,
     publicationYear: book.publicationYear,
     authors: authors,
@@ -218,7 +218,7 @@ export async function create({ title, price, stock, publicationYear, authorIds, 
   const finalBook = {
     id: newBook.id,
     title: newBook.title,
-    price: newBook.price,
+    price: Number(newBook.price).toFixed(2),
     stock: newBook.stock,
     publicationYear: newBook.publicationYear,
     authors: authors,
@@ -229,6 +229,7 @@ export async function create({ title, price, stock, publicationYear, authorIds, 
 
 export async function update(id, updatedData) {
   try {
+    console.log(updatedData)
     const updatedBook = await prisma.book.update({
       where: { id },
       data: updatedData,
@@ -250,7 +251,7 @@ export async function update(id, updatedData) {
     const finalBook = {
       id: updatedBook.id,
       title: updatedBook.title,
-      price: updatedBook.price,
+      price: Number(updatedBook.price).toFixed(2),
       stock: updatedBook.stock,
       publicationYear: updatedBook.publicationYear,
       authors: authors,

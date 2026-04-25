@@ -25,7 +25,7 @@ export const validateCreateBook = [
     .exists({ values: 'falsy' })
     .withMessage('Price is required')
     .bail()
-    .isDecimal({ min: 1.00})
+    .isFloat({ min: 0.01 })
     .withMessage('Price must be a postive decimal'),
 
   body('stock')
@@ -67,7 +67,7 @@ export const validateUpdateBook = [
 
   body('price')
     .optional()
-    .isDecimal({ min: 1.00})
+    .isFloat({ min: 0.01 })
     .withMessage('Price must be a postive decimal'),
 
   body('stock')

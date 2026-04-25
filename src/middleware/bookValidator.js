@@ -82,7 +82,7 @@ export const validateBookQuery = [
   query('sortBy')
     .optional()
     .isIn(['id', 'title', 'publicationYear', 'stock', 'price'])
-    .withMessage('sortBy must be one of id, title, publication_year, stock, or price'),
+    .withMessage('sortBy must be one of id, title, publicationYear, stock, or price'),
 
   query('order')
     .optional()

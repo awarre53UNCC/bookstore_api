@@ -23,12 +23,12 @@ export async function getReviewById(id) {
 
 export async function getReviewByBookId(id) {
   const review = await getByBookId(id);
-  if (review) return review;
-  else {
+  if (review.length === 0) {
     const error = new Error(`Book ${id} not found`);
     error.status = 404;
     throw error;
   }
+  return review;
 }
 
 export async function createReview(reviewData, user) {

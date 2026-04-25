@@ -53,7 +53,7 @@ export const validateOrderQuery = [
   query('sortBy')
     .optional()
     .isIn(['id', 'createdAt', 'status', 'totalPrice', 'userId'])
-    .withMessage('sortBy must be one of id, created_at, status, total_price, or user_id'),
+    .withMessage('sortBy must be one of id, createdAt, status, totalPrice, or userId'),
 
   query('order')
     .optional()

@@ -71,7 +71,7 @@ export async function createOrderHandler(req, res) {
 
     let book = await getById(items[i].bookId);
     if (!book) {
-      const error = new Error(`Bad request: no book with an ID of ${items[i].bookId} `);
+      const error = new Error(`Bad request: no book with an ID of ${items[i].bookId}`);
       error.status = 400;
       throw error;
     }

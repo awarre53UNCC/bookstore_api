@@ -12,11 +12,15 @@ tags:
   - name: Auth
     description: User authentication endpoints
   - name: Books
-    description: Operations related to book inventory
+    description: Operations related to book catalog
   - name: Orders
     description: Operations related to book orders 
   - name: Reviews
-    description: Operations related to book reviews
+    description: Operations related to book reviews, contain book ratings (1-5)
+  - name: Categories
+    description:  Operations related to book categories. Used to add new categories to the bookstore
+  - name: Authors
+    description:  Operations related to book authors. Used to add new authors to the bookstore
   #should i do sub tags for additional book endpoints
 
 paths: 
@@ -106,10 +110,10 @@ paths:
             schema:
               type: string
               example: Rowling
-          - $ref: '#/components/parameters/SortBooks'
-          - $ref: '#/components/parameters/OrderBooks'
-          - $ref: '#/components/parameters/OffsetBooks'
-          - $ref: '#/components/parameters/LimitBooks'
+          - $ref: '#/components/parameters/SortBook'
+          - $ref: '#/components/parameters/OrderBy'
+          - $ref: '#/components/parameters/Offset'
+          - $ref: '#/components/parameters/Limit'
         responses:
           '200': 
             description: A list of books
@@ -137,7 +141,7 @@ paths:
                 $ref: '#/components/schemas/BookCreate'
         responses:
           '201':
-            description: Post successfully created
+            description: Book successfully created
             content:
               application/json:
                 schema:
@@ -194,7 +198,7 @@ paths:
         parameters:
           - $ref: '#/components/parameters/ResourceId'
         requestBody:
-          description: Fields to update the post. At least one of "title", "stock", or "price" must be provided.
+          description: Fields to update the book. At least one of "title", "stock", or "price" must be provided.
           required: true
           content:
             application/json:
@@ -227,20 +231,22 @@ paths:
                       - Price must be greater than 0
           '403':
             $ref: '#/components/responses/Unauthorized'
+          '404':
+            $ref: '#/components/responses/NotFound'
           '409':
             $ref: '#/components/responses/duplicateTitle'
       delete:
         security:
             - bearerAuth: []
         tags:
-          - Posts
+          - Books
         summary: Delete a book by ID
         description: Delete a single book by its ID, admin only.
         parameters:
           - $ref: '#/components/parameters/ResourceId'
         responses:
           '204':
-            description: Post deleted successfully
+            description: Book deleted successfully
           '400':
             $ref: '#/components/responses/InvalidId'
           '401':
@@ -251,42 +257,563 @@ paths:
             $ref: '#/components/responses/NotFound'
     
     /orders:
+    
       get:
+          security:
+            - bearerAuth: []
           tags:
             - Orders
           summary: Gets all orders
-          description: Retrieves the bookstore's book catalog
+          description: Admins retrieve all bookstore's orders, users retrieve all their specific orders
           parameters:
-            - $ref: '#/components/parameters/SearchBooks'
-            - name: category
-              in: query
-              required: false
-              description: Filter books containing this category
-              schema:
-                type: string
-                example: fantasy
-            - name: author
-              in: query
-              required: false
-              description: Filter books containing this author
-              schema:
-                type: string
-                example: Rowling
-            - $ref: '#/components/parameters/SortBooks'
-            - $ref: '#/components/parameters/OrderBooks'
-            - $ref: '#/components/parameters/OffsetBooks'
-            - $ref: '#/components/parameters/LimitBooks'
+            - $ref: '#/components/parameters/SortOrder'
+            - $ref: '#/components/parameters/OrderBy'
+            - $ref: '#/components/parameters/Offset'
+            - $ref: '#/components/parameters/Limit'
           responses:
             '200': 
-              description: A list of books
+              description: A list of orders
               content: 
                 application/json:
                   schema: 
                     type: array
                     items: 
-                      $ref: '#/components/schemas/Book'
+                      $ref: '#/components/schemas/Order'
+            '401':
+              $ref: '#/components/responses/Unauthenticated'
+            '400':
+              $ref: '#/components/responses/InvalidOrderQuery'
 
+      post:
+        security:
+          - bearerAuth: []
+        tags:
+          - Orders
+        summary: Creates a new order
+        description: Create a new order and adds to the catalog, available to any authenticated user.
+        requestBody: 
+          description: Order object to create.
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrder'
+        responses:
+          '201':
+            description: Order successfully created
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Order'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '400':
+            description: Bad request due to invalid order data
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties: 
+                    errors:
+                      type: array
+                      items: 
+                        type: string
+                  example:
+                    errors:
+                      - Items must be an non-empty array
+                      - bookId is required
+                      - quantity is required
+          '404':
+            description: Book not found, cannot create order
+            content:
+              application/json:
+                schema: 
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                  example: 
+                    error: 'Bad request: no book with an ID of 100'
 
+    /orders/{id}:
+      get:
+        security:
+            - bearerAuth: []
+        tags:
+          - Orders
+        summary: Get a order by ID
+        description: Retrieve a single book by its ID, must be owner of order or admin.
+        parameters:
+          - $ref: '#/components/parameters/ResourceId'
+        responses: 
+          '200':
+            description: A single order
+            content: 
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Order'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '400':
+            $ref: '#/components/responses/InvalidId'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403': 
+            description: Order is not owned by authenticated user
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                  example:
+                    error: "Forbidden: Not your order"
+      put:
+        security:
+            - bearerAuth: []
+        tags:
+          - Orders
+        summary: Update a order by ID
+        description: Update a orders status by its ID, admin only.
+        parameters:
+          - $ref: '#/components/parameters/ResourceId'
+        requestBody:
+          description: Status to update the order. Must be one of "PENDING", "SHIPPING", or "DELIVERED".
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  status:
+                    type: string
+                    #readOnly: true
+                    enum: [PENDING, SHIPPING, DELIVERED]
+                    example: SHIPPING
+        responses:
+          '200':
+            description: Order updated successfully
+            content: 
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/UpdatedOrder'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '400':
+            description: Bad request due to invalid order data
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties: 
+                    errors:
+                      type: array
+                      items: 
+                        type: string
+                  example:
+                    errors:
+                      - status is required
+                      - status must be PENDING, SHIPPING, or DELIVERED
+          '403':
+            $ref: '#/components/responses/Unauthorized'
+          '404':
+            $ref: '#/components/responses/NotFound'
+
+      delete:
+        security:
+            - bearerAuth: []
+        tags:
+          - Orders
+        summary: Delete a order by ID
+        description: Delete a single order by its ID, must be owner of order or admin..
+        parameters:
+          - $ref: '#/components/parameters/ResourceId'
+        responses:
+          '204':
+            description: Order deleted successfully
+          '400':
+            $ref: '#/components/responses/InvalidId'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403': 
+            description: Order is not owned by authenticated user
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                  example:
+                    error: "Forbidden: Not your order"
+          '404':
+            $ref: '#/components/responses/NotFound'
+
+    /reviews:
+      get:
+        tags:
+          - Reviews
+        summary: Gets all reviews
+        description: Retrieves the reviews for all books
+        parameters:
+          - name: search
+            in: query
+            required: false
+            description: Filter reviews containing this keyword
+            schema:
+              type: string
+              example: Great
+          - $ref: '#/components/parameters/SortReview'
+          - $ref: '#/components/parameters/OrderBy'
+          - $ref: '#/components/parameters/Offset'
+          - $ref: '#/components/parameters/Limit'
+        responses:
+          '200': 
+            description: A list of reviews
+            content: 
+              application/json:
+                schema: 
+                  type: array
+                  items: 
+                    $ref: '#/components/schemas/Review'
+          '400':
+            $ref: '#/components/responses/InvalidReviewQuery'
+      post:
+        security:
+          - bearerAuth: []
+        tags:
+          - Reviews
+        summary: Create a new review
+        description: Create a new review for a book, authenticated users only.
+        requestBody: 
+          description: Review object to create.
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewCreate'
+        responses:
+          '201':
+            description: Review successfully created
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Review'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '400':
+            description: Bad request due to invalid book data
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties: 
+                    errors:
+                      type: array
+                      items: 
+                        type: string
+                  example:
+                    errors:
+                      - Rating must be a postive integer (1-5)
+                      - Comment must be at least 3 characters
+                      - bookId must be a postive integer
+          '409':
+            description: Book already reviewed by user
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                  example:
+                    error: 'Conflict: cannot review the same book more than once'
+          '404':
+            description: Book not found, cannot create review
+            content:
+              application/json:
+                schema: 
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                  example: 
+                    error: 'Review invalid: Book 100 not found'
+
+    /reviews/{id}:
+      get:
+        tags:
+          - Reviews
+        summary: Get a review by ID
+        description: Retrieve a single review by its ID.
+        parameters:
+          - $ref: '#/components/parameters/ResourceId'
+        responses: 
+          '200':
+            description: A single review
+            content: 
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Review'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '400':
+            $ref: '#/components/responses/InvalidId'
+        
+      put:
+        security:
+            - bearerAuth: []
+        tags:
+          - Reviews
+        summary: Update a review by ID
+        description: Update a review by its ID, owner of review only.
+        parameters:
+          - $ref: '#/components/parameters/ResourceId'
+        requestBody:
+          description: Review object to update (rating & comment).
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  rating:
+                    type: integer
+                    example: 1
+                  comment:
+                    type: string
+                    example: Changed my mind, dont like the ending
+        responses:
+          '200':
+            description: Review updated successfully
+            content: 
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Review'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '400':
+            description: Bad request due to invalid review data
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties: 
+                    errors:
+                      type: array
+                      items: 
+                        type: string
+                  example:
+                    errors:
+                      - Rating must be a postive integer (1-5)
+                      - Comment must be at least 3 characters
+          '403': 
+            description: Review is not owned by authenticated user
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                  example:
+                    error: "Forbidden: Not your review"
+          '404':
+            $ref: '#/components/responses/NotFound'
+
+      delete:
+        security:
+            - bearerAuth: []
+        tags:
+          - Reviews
+        summary: Delete a review by ID
+        description: Delete a review by its ID, owner of review only.
+        parameters:
+          - $ref: '#/components/parameters/ResourceId'
+        responses:
+          '204':
+            description: Review deleted successfully
+          '400':
+            $ref: '#/components/responses/InvalidId'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '403': 
+            description: Review is not owned by authenticated user
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                  example:
+                    error: "Forbidden: Not your review"
+          '404':
+            $ref: '#/components/responses/NotFound'
+
+    /books/{id}/reviews:
+       get:
+        tags:
+          - Reviews
+        summary: Get all reviews by bookId
+        description: Retrieve all reviews for the book ID provided.
+        parameters:
+          - $ref: '#/components/parameters/ResourceId'
+        responses: 
+          '200':
+            description: A list of reviews for a book
+            content: 
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Review'
+          '404':
+            $ref: '#/components/responses/NotFound'
+          '400':
+            $ref: '#/components/responses/InvalidId'
+
+    /authors:
+      get:
+        tags:
+          - Authors
+        summary: Gets all authors
+        description: Retrieves all authors with books in the bookstore
+        responses:
+          '200': 
+            description: A list of authors
+            content: 
+              application/json:
+                schema: 
+                  type: array
+                  items: 
+                    $ref: '#/components/schemas/Author'
+      post: 
+        security:
+          - bearerAuth: []
+        tags:
+          - Authors
+        summary: Creates an author
+        description: Adds an authors to the bookstore, used to create author for new book added to the catalog
+        requestBody:
+          description: Author object to create.
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  name:
+                    type: string
+                    example: Suzanne Collins
+
+        responses:
+          '201': 
+            description: Successful author creation
+            content: 
+              application/json:
+                schema: 
+                  $ref: '#/components/schemas/Author'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '400':
+            description: Bad request due to invalid author data
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties: 
+                    errors:
+                      type: array
+                      items: 
+                        type: string
+                  example:
+                    errors:
+                      - Name (full name) must be at least 3 characters
+          '403':
+            $ref: '#/components/responses/Unauthorized'
+          '409':
+            description: Author already registered to catalog
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                  example:
+                    error: 'Conflict: duplicate author'
+
+    /categories:
+      get:
+        tags:
+          - Categories
+        summary: Gets all categories
+        description: Retrieves all categories in the bookstore
+        responses:
+          '200': 
+            description: A list of categories
+            content: 
+              application/json:
+                schema: 
+                  type: array
+                  items: 
+                    $ref: '#/components/schemas/Category'
+      post: 
+        security:
+          - bearerAuth: []
+        tags:
+          - Categories
+        summary: Creates a category
+        description: Adds a category to the bookstore, used to create category for new book added to the catalog
+        requestBody:
+          description: Category object to create.
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  name:
+                    type: string
+                    example: Health and Fitness
+
+        responses:
+          '201': 
+            description: Successful category creation
+            content: 
+              application/json:
+                schema: 
+                  $ref: '#/components/schemas/Category'
+          '401':
+            $ref: '#/components/responses/Unauthenticated'
+          '400':
+            description: Bad request due to invalid category data
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties: 
+                    errors:
+                      type: array
+                      items: 
+                        type: string
+                  example:
+                    errors:
+                      - Name (for category) must be at least 3 characters
+          '403':
+            $ref: '#/components/responses/Unauthorized'
+          '409':
+            description: Category already registered to catalog
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                  example:
+                    error: 'Conflict: duplicate category'
+      
 components:
   schemas:
     Author:
@@ -376,7 +903,138 @@ components:
           type: integer
           #readOnly: true
           example: 5
-      
+    
+    OrderItems:
+      type: object
+      properties:
+        bookId:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "Harry Potter"
+        quantity:
+          type: integer
+          example: 1
+        price:
+          type: integer
+          example: 29.99
+      required:
+        - bookId
+        - title
+        - quantity
+        - price
+
+    Order:
+      type: object
+      properties: 
+        id:
+          type: integer
+          #readOnly: true
+          example: 1
+        totalPrice:
+          type: integer
+          example: 29.99
+        status:
+          type: string
+          #readOnly: true
+          example: PENDING
+        createdAt:
+          type: string
+          #readOnly: true
+          example: 2026-04-23T20:12:43.980Z
+        userId:
+          type: integer
+          example: 1
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItems'
+    
+    CreateOrder:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              bookId:
+                type: integer
+                example: 1
+              quantity:
+                type: integer
+                example: 2
+            required:
+              - bookId
+              - quantity
+      required:
+        - items
+    UpdatedOrder:
+      type: object
+      properties: 
+        id:
+          type: integer
+          #readOnly: true
+          example: 1
+        totalPrice:
+          type: integer
+          example: 29.99
+        status:
+          type: string
+          #readOnly: true
+          example: SHIPPING
+        createdAt:
+          type: string
+          #readOnly: true
+          example: 2026-04-23T20:12:43.980Z
+        userId:
+          type: integer
+          example: 1
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItems'
+
+    Review:
+      type: object
+      properties: 
+        id:
+          type: integer
+          #readOnly: true
+          example: 1
+        rating:
+          type: integer
+          example: 5
+        comment:
+          type: string
+          #readOnly: true
+          example: Good read!
+        createdAt:
+          type: string
+          #readOnly: true
+          example: 2026-04-23T20:12:43.976Z
+        userId:
+          type: integer
+          example: 1
+        bookId:
+          type: integer
+          example: 1
+
+    ReviewCreate:
+      type: object
+      properties: 
+        rating:
+          type: integer
+          example: 5
+        comment:
+          type: string
+          example: A great book for the summer
+        bookId:
+          type: integer
+          #readOnly: true
+          example: 1
+
     AuthCredentials:
       type: object
       properties:
@@ -413,7 +1071,7 @@ components:
       schema:
         type: string
         example: Harry Potter
-    SortBooks:
+    SortBook:
       name: sortBy
       in: query
       required: false
@@ -422,7 +1080,25 @@ components:
         type: string
         enum: [id, title, publication_year, stock, price]
         example: price
-    OrderBooks:
+    SortOrder:
+      name: sortBy
+      in: query
+      required: false
+      description: Field to sort results by
+      schema:
+        type: string
+        enum: [id, createdAt, status, totalPrice, userId]
+        example: userId
+    SortReview:
+      name: sortBy
+      in: query
+      required: false
+      description: Field to sort results by
+      schema:
+        type: string
+        enum: [userId, bookId, rating, comment, createdAt]
+        example: rating
+    OrderBy:
       name: order
       in: query
       required: false
@@ -431,7 +1107,7 @@ components:
         type: string
         enum: [asc, desc]
         example: desc
-    OffsetBooks:
+    Offset:
       name: offset
       in: query
       required: false
@@ -439,7 +1115,7 @@ components:
       schema:
         type: integer
         example: 0
-    LimitBooks:
+    Limit:
       name: limit
       in: query
       required: false
@@ -502,6 +1178,38 @@ components:
             example:
               errors:
                 - sortBy must be one of id, title, publication_year, stock, or price
+                - limit must be an integer between 1 and 50
+                - order must be either asc or desc
+    InvalidOrderQuery:
+      description: Bad request due to invalid query
+      content:
+        application/json:
+          schema:
+            type: object
+            properties: 
+              errors:
+                type: array
+                items: 
+                  type: string
+            example:
+              errors:
+                - sortBy must be one of id, createdAt, status, totalPrice, or userId
+                - limit must be an integer between 1 and 50
+                - order must be either asc or desc
+    InvalidReviewQuery:
+      description: Bad request due to invalid query
+      content:
+        application/json:
+          schema:
+            type: object
+            properties: 
+              errors:
+                type: array
+                items: 
+                  type: string
+            example:
+              errors:
+                - sortBy must be one of userId, bookId, rating, comment, or createdAt
                 - limit must be an integer between 1 and 50
                 - order must be either asc or desc
     

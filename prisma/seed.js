@@ -116,9 +116,11 @@ const allCategories = await prisma.category.findMany();
 await prisma.bookAuthor.createMany({
   data: [
     { bookId: books[0].id, authorId: allAuthors[0].id },
+    { bookId: books[0].id, authorId: allAuthors[1].id },
     { bookId: books[1].id, authorId: allAuthors[1].id },
     { bookId: books[2].id, authorId: allAuthors[2].id },
     { bookId: books[3].id, authorId: allAuthors[3].id },
+    { bookId: books[3].id, authorId: allAuthors[4].id },
     { bookId: books[4].id, authorId: allAuthors[4].id },
   ],
 });
@@ -127,10 +129,13 @@ await prisma.bookAuthor.createMany({
 await prisma.bookCategory.createMany({
   data: [
     { bookId: books[0].id, categoryId: allCategories[0].id },
+    { bookId: books[0].id, categoryId: allCategories[4].id },
     { bookId: books[1].id, categoryId: allCategories[1].id },
     { bookId: books[2].id, categoryId: allCategories[2].id },
+    { bookId: books[2].id, categoryId: allCategories[3].id },
     { bookId: books[3].id, categoryId: allCategories[3].id },
     { bookId: books[4].id, categoryId: allCategories[3].id },
+    { bookId: books[4].id, categoryId: allCategories[2].id },
   ],
 });
 
@@ -138,7 +143,9 @@ await prisma.bookCategory.createMany({
 await prisma.review.createMany({
   data: [
     { rating: 5, comment: 'Excellent!', userId: user.id, bookId: books[0].id },
+    { rating: 4, comment: 'Very useful', userId: admin.id, bookId: books[0].id },
     { rating: 4, comment: 'Great read', userId: user.id, bookId: books[1].id },
+    { rating: 5, comment: 'Amazing!', userId: admin.id, bookId: books[1].id },
     { rating: 5, comment: 'Classic!', userId: admin.id, bookId: books[2].id },
     { rating: 3, comment: 'Pretty good', userId: user.id, bookId: books[3].id },
     { rating: 4, comment: 'Loved it', userId: admin.id, bookId: books[4].id },
@@ -149,35 +156,35 @@ await prisma.review.createMany({
 const orders = await Promise.all([
   prisma.order.create({
     data: {
-      totalPrice: 39.99,
+      totalPrice: 99.97,
       status: 'PENDING',
       userId: user.id,
     },
   }),
   prisma.order.create({
     data: {
-      totalPrice: 29.99,
+      totalPrice: 64.96,
       status: 'SHIPPING',
       userId: user.id,
     },
   }),
   prisma.order.create({
     data: {
-      totalPrice: 19.99,
+      totalPrice: 49.98,
       status: 'DELIVERED',
       userId: admin.id,
     },
   }),
   prisma.order.create({
     data: {
-      totalPrice: 14.99,
+      totalPrice: 49.98,
       status: 'PENDING',
       userId: user.id,
     },
   }),
   prisma.order.create({
     data: {
-      totalPrice: 24.99,
+      totalPrice: 79.98,
       status: 'DELIVERED',
       userId: admin.id,
     },
@@ -188,10 +195,13 @@ const orders = await Promise.all([
 await prisma.orderItem.createMany({
   data: [
     { orderId: orders[0].id, bookId: books[0].id, quantity: 1, price: 39.99 },
-    { orderId: orders[1].id, bookId: books[1].id, quantity: 1, price: 29.99 },
-    { orderId: orders[2].id, bookId: books[2].id, quantity: 1, price: 19.99 },
-    { orderId: orders[3].id, bookId: books[3].id, quantity: 1, price: 14.99 },
-    { orderId: orders[4].id, bookId: books[4].id, quantity: 1, price: 24.99 },
+    { orderId: orders[0].id, bookId: books[1].id, quantity: 2, price: 29.99 },
+    { orderId: orders[1].id, bookId: books[2].id, quantity: 1, price: 19.99 },
+    { orderId: orders[1].id, bookId: books[3].id, quantity: 3, price: 14.99 },
+    { orderId: orders[2].id, bookId: books[4].id, quantity: 2, price: 24.99 },
+    { orderId: orders[3].id, bookId: books[1].id, quantity: 1, price: 29.99 },
+    { orderId: orders[3].id, bookId: books[2].id, quantity: 1, price: 19.99 },
+    { orderId: orders[4].id, bookId: books[0].id, quantity: 2, price: 39.99 },
   ],
 });
 

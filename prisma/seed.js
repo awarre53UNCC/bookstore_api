@@ -7,17 +7,12 @@ console.log('Clearing database...');
 
 // Reset DB
 
-await prisma.$transaction([
-  prisma.orderItem.deleteMany(),
-  prisma.review.deleteMany(),
-  prisma.bookAuthor.deleteMany(),
-  prisma.bookCategory.deleteMany(),
-  prisma.order.deleteMany(),
-  prisma.book.deleteMany(),
-  prisma.author.deleteMany(),
-  prisma.category.deleteMany(),
-  prisma.user.deleteMany(),
-]);
+await prisma.$executeRawUnsafe(`
+  TRUNCATE TABLE 
+  "order_items", "reviews", "book_authors", "book_categories",
+  "orders", "books", "authors", "categories", "users"
+  RESTART IDENTITY CASCADE;
+`);
 
 console.log('Database cleared!');
 

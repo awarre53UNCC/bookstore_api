@@ -7,7 +7,7 @@
     "dev": "node --env-file=.env --watch src/server.js",
     "seed": "node prisma/seed.js",
     "start": "node src/server.js",
-    "reset": "npx prisma migrate reset",  
+    "migrate:reset": "npx prisma migrate reset",  
     "migrate:dev": "npx prisma migrate dev",
     "migrate:deploy": "npx prisma migrate deploy",
     "seed:dev": "node --env-file=.env prisma/seed.js",

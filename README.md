@@ -1,3 +1,3 @@
-# Final Project Template
+# Final Project BookStore API
 
-This repository provides the **folder structure** for your team’s final project. All implementation is left to students.
+Backend Application for a Bookstore, contains three major endpoints: books, orders, and reviews.

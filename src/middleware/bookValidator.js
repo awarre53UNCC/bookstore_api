@@ -26,21 +26,21 @@ export const validateCreateBook = [
     .withMessage('Price is required')
     .bail()
     .isFloat({ min: 0.01 })
-    .withMessage('Price must be a postive decimal'),
+    .withMessage('Price must be a positive decimal'),
 
   body('stock')
     .exists({ values: 'falsy' })
     .withMessage('Stock is required')
     .bail()
     .isInt({ min: 1})
-    .withMessage('Stock must be a postive integer'),
+    .withMessage('Stock must be a positive integer'),
 
   body('publicationYear')
     .exists({ values: 'falsy' })
     .withMessage('Publication Year is required')
     .bail()
     .isInt({ min: 1800})
-    .withMessage('Publication Year must be a postive integer'), 
+    .withMessage('Publication Year must be a positive integer'), 
 
   handleValidationErrors,
 ];
@@ -68,17 +68,19 @@ export const validateUpdateBook = [
   body('price')
     .optional()
     .isFloat({ min: 0.01 })
-    .withMessage('Price must be a postive decimal'),
+    .withMessage('Price must be a positive decimal'),
 
   body('stock')
     .optional()
     .isInt({ min: 1})
-    .withMessage('Stock must be a postive integer'),
+    .withMessage('Stock must be a positive integer'),
 
   handleValidationErrors,
 ];
 
 export const validateBookQuery = [
+  // query('category')
+
   query('sortBy')
     .optional()
     .isIn(['id', 'title', 'publicationYear', 'stock', 'price'])

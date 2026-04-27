@@ -26,14 +26,14 @@ export const validateCreateReview = [
     .withMessage('Rating is required')
     .bail()
     .isInt({ min: 1, max: 5})
-    .withMessage('Rating must be a postive integer (1-5)'),
+    .withMessage('Rating must be a positive integer (1-5)'),
 
   body('bookId')
     .exists({ values: 'falsy' })
     .withMessage('bookId is required')
     .bail()
     .isInt({ min: 1})
-    .withMessage('bookId must be a postive integer'),
+    .withMessage('bookId must be a positive integer'),
     
   handleValidationErrors,
 ];
@@ -49,7 +49,7 @@ export const validateUpdateReview = [
 
   body('rating')
     .isInt({ min: 1, max: 5})
-    .withMessage('Rating must be a postive integer (1-5)'),
+    .withMessage('Rating must be a positive integer (1-5)'),
 
   body('comment')
     .trim()
